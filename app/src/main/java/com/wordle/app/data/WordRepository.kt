@@ -10,7 +10,7 @@ import javax.inject.Singleton
 class WordRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val wordCache = mutableMapOf<String, List<String>>()
+    private val wordCache = mutableMapOf<String, Set<String>>()
 
     fun getRandomWord(language: Language): String {
         val words = loadWords(language)
@@ -18,18 +18,28 @@ class WordRepository @Inject constructor(
     }
 
     fun isValidWord(word: String, language: Language): Boolean {
-        return loadWords(language).any { it.equals(word, ignoreCase = true) }
+        return loadWordSet(language).contains(word.uppercase())
     }
 
     fun getAllWords(language: Language): List<String> = loadWords(language)
 
     private fun loadWords(language: Language): List<String> {
+        return loadWordSet(language).toList()
+    }
+
+    private fun loadWordSet(language: Language): Set<String> {
         return wordCache.getOrPut(language.code) {
-            val fileName = "words_${language.code}.txt"
-            context.assets.open(fileName)
-                .bufferedReader()
-                .readLines()
-                .filter { it.length == language.wordLength && it.all { c -> c.isLetter() } }
+            try {
+                val fileName = "words_${language.code}.txt"
+                context.assets.open(fileName)
+                    .bufferedReader()
+                    .readLines()
+                    .filter { it.length == language.wordLength && it.all { c -> c.isLetter() } }
+                    .map { it.uppercase() }
+                    .toHashSet()
+            } catch (e: Exception) {
+                emptySet()
+            }
         }
     }
 }

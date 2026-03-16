@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
-import androidx.compose.runtime.LaunchedEffect
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -30,7 +29,7 @@ import com.wordle.app.ui.tutorial.TutorialScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private val android.content.Context.mainDataStore
@@ -49,87 +48,94 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         DailyNotificationHelper.schedule(this)
 
-        // Check if tutorial has been shown
-        val tutorialDone = runBlocking {
-            mainDataStore.data.map { it[KEY_TUTORIAL_DONE] ?: false }.first()
-        }
-
-        // Parse challenge deep link if present
-        val challengeWord = intent?.data?.let { uri ->
-            if (uri.host == "wordle.app" && uri.path == "/challenge") {
-                uri.getQueryParameter("w")?.let { token ->
-                    challengeRepository.decodeChallengeToken(token)
-                }
-            } else null
-        }
-
         setContent {
             val navController = rememberNavController()
             val gameViewModel: GameViewModel = hiltViewModel()
             val darkTheme by gameViewModel.darkTheme.collectAsState()
 
-            val startDest = when {
-                !tutorialDone -> "tutorial"
-                challengeWord != null -> "challenge/{word}"
-                else -> "game"
+            // Async startup: read prefs + parse deep link off the main thread
+            var startDest by remember { mutableStateOf<String?>(null) }
+
+            LaunchedEffect(Unit) {
+                val tutorialDone = mainDataStore.data
+                    .map { it[KEY_TUTORIAL_DONE] ?: false }
+                    .first()
+
+                val challengeWord = intent?.data?.let { uri ->
+                    if (uri.host == "wordle.app" && uri.path == "/challenge") {
+                        uri.getQueryParameter("w")?.let { token ->
+                            challengeRepository.decodeChallengeToken(token)
+                        }
+                    } else null
+                }
+
+                startDest = when {
+                    !tutorialDone        -> "tutorial"
+                    challengeWord != null -> "challenge/$challengeWord"
+                    else                 -> "game"
+                }
             }
 
             WordleTheme(darkTheme = darkTheme) {
-                NavHost(navController = navController, startDestination = startDest) {
+                // Show nothing until start destination is resolved (splash covers this)
+                startDest?.let { dest ->
+                    NavHost(navController = navController, startDestination = dest) {
 
-                    composable("tutorial") {
-                        TutorialScreen(onDone = {
-                            runBlocking {
-                                mainDataStore.edit { it[KEY_TUTORIAL_DONE] = true }
-                            }
-                            navController.navigate("game") {
-                                popUpTo("tutorial") { inclusive = true }
-                            }
-                        })
-                    }
+                        composable("tutorial") {
+                            val scope = rememberCoroutineScope()
+                            TutorialScreen(onDone = {
+                                scope.launch {
+                                    mainDataStore.edit { it[KEY_TUTORIAL_DONE] = true }
+                                }
+                                navController.navigate("game") {
+                                    popUpTo("tutorial") { inclusive = true }
+                                }
+                            })
+                        }
 
-                    composable("game") {
-                        GameScreen(
-                            onNavigateToStats    = { navController.navigate("stats") },
-                            onNavigateToSettings = { navController.navigate("settings") },
-                            onNavigateToProfile  = { navController.navigate("profile") },
-                            viewModel = gameViewModel
-                        )
-                    }
+                        composable("game") {
+                            GameScreen(
+                                onNavigateToStats    = { navController.navigate("stats") },
+                                onNavigateToSettings = { navController.navigate("settings") },
+                                onNavigateToProfile  = { navController.navigate("profile") },
+                                viewModel = gameViewModel
+                            )
+                        }
 
-                    composable(
-                        route = "challenge/{word}",
-                        arguments = listOf(navArgument("word") { type = NavType.StringType })
-                    ) { backStack ->
-                        val word = backStack.arguments?.getString("word") ?: ""
-                        LaunchedEffect(word) {
-                            if (word.isNotBlank()) gameViewModel.startChallenge(word)
-                            navController.navigate("game") {
-                                popUpTo("challenge/{word}") { inclusive = true }
+                        composable(
+                            route = "challenge/{word}",
+                            arguments = listOf(navArgument("word") { type = NavType.StringType })
+                        ) { backStack ->
+                            val word = backStack.arguments?.getString("word") ?: ""
+                            LaunchedEffect(word) {
+                                if (word.isNotBlank()) gameViewModel.startChallenge(word)
+                                navController.navigate("game") {
+                                    popUpTo("challenge/{word}") { inclusive = true }
+                                }
                             }
                         }
-                    }
 
-                    composable("settings") {
-                        SettingsScreen(
-                            onBack    = { navController.popBackStack() },
-                            viewModel = gameViewModel
-                        )
-                    }
+                        composable("settings") {
+                            SettingsScreen(
+                                onBack    = { navController.popBackStack() },
+                                viewModel = gameViewModel
+                            )
+                        }
 
-                    composable("stats") {
-                        StatsScreen(
-                            onBack    = { navController.popBackStack() },
-                            viewModel = gameViewModel,
-                            statsDao  = statsDao
-                        )
-                    }
+                        composable("stats") {
+                            StatsScreen(
+                                onBack    = { navController.popBackStack() },
+                                viewModel = gameViewModel,
+                                statsDao  = statsDao
+                            )
+                        }
 
-                    composable("profile") {
-                        ProfileScreen(
-                            onBack    = { navController.popBackStack() },
-                            viewModel = gameViewModel
-                        )
+                        composable("profile") {
+                            ProfileScreen(
+                                onBack    = { navController.popBackStack() },
+                                viewModel = gameViewModel
+                            )
+                        }
                     }
                 }
             }
@@ -138,17 +144,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        // Handle deep link when app is already running
+        // Handle deep link when app is already running — navigate directly via ViewModel
         intent.data?.let { uri ->
             if (uri.host == "wordle.app" && uri.path == "/challenge") {
                 uri.getQueryParameter("w")?.let { token ->
                     challengeRepository.decodeChallengeToken(token)?.let { word ->
-                        // Re-launch with challenge word via intent
-                        val relaunch = Intent(this, MainActivity::class.java).apply {
-                            data = uri
-                            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-                        }
-                        startActivity(relaunch)
+                        // Post the challenge word; GameScreen will pick it up on next composition
+                        setIntent(intent)
+                        recreate() // safe single-top re-entry without infinite loop
                     }
                 }
             }

@@ -28,11 +28,12 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         }
         val pi = PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_IMMUTABLE)
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Today's Wordle is ready! 🟩")
             .setContentText("A new word is waiting. Can you solve it?")
             .setContentIntent(pi)
             .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
         nm.notify(1001, notification)
         // Re-schedule for next day
@@ -59,5 +60,14 @@ object DailyNotificationHelper {
         val intent = Intent(context, DailyNotificationReceiver::class.java)
         val pi = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         am.cancel(pi)
+    }
+}
+
+/** Reschedules the daily alarm after device reboot. */
+class BootReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            DailyNotificationHelper.schedule(context)
+        }
     }
 }
