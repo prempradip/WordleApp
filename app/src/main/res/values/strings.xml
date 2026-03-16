@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wordle</string>
+    <string name="not_enough_letters">Not enough letters</string>
+    <string name="not_in_word_list">Not in word list</string>
+    <string name="you_won">You Won!</string>
+    <string name="game_over">Game Over</string>
+    <string name="play_again">Play Again</string>
+    <string name="the_word_was">The word was</string>
+</resources>

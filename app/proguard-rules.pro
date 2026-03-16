@@ -1,0 +1,3 @@
+-keep class com.wordle.app.** { *; }
+-keepattributes *Annotation*
+-dontwarn okhttp3.**
