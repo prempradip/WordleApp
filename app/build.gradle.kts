@@ -22,11 +22,18 @@ android {
 
     signingConfigs {
         create("release") {
-            // Set via environment variables or local.properties — never hardcode keys
-            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "keystore/release.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("KEY_ALIAS") ?: ""
-            keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+            // Values injected by Codemagic via -P flags or environment variables
+            storeFile = file(
+                project.findProperty("KEYSTORE_PATH") as String?
+                    ?: System.getenv("CM_KEYSTORE_PATH")
+                    ?: "keystore/release.jks"
+            )
+            storePassword = (project.findProperty("KEYSTORE_PASSWORD") as String?
+                ?: System.getenv("CM_KEYSTORE_PASSWORD") ?: "")
+            keyAlias = (project.findProperty("KEY_ALIAS") as String?
+                ?: System.getenv("CM_KEY_ALIAS") ?: "")
+            keyPassword = (project.findProperty("KEY_PASSWORD") as String?
+                ?: System.getenv("CM_KEY_PASSWORD") ?: "")
         }
     }
 
