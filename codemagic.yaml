@@ -9,7 +9,7 @@ workflows:
       groups:
         - wordle_env
       vars:
-        PACKAGE_NAME: "com.wordle.app"
+        PACKAGE_NAME: "com.prempradip.wordleapp"
       java: 17
 
     triggering:
