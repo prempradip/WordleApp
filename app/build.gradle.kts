@@ -40,7 +40,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
+            val hasKeystore = (project.findProperty("KEYSTORE_PATH") as String?
+                ?: System.getenv("CM_KEYSTORE_PATH")) != null
+            if (hasKeystore) signingConfig = signingConfigs.getByName("release")
         }
         debug {
             applicationIdSuffix = ".debug"
