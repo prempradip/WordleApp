@@ -38,11 +38,7 @@ workflows:
 
       - name: Build release AAB
         script: |
-          ./gradlew bundleRelease \
-            -PKEYSTORE_PATH="$CM_KEYSTORE_PATH" \
-            -PKEYSTORE_PASSWORD="$CM_KEYSTORE_PASSWORD" \
-            -PKEY_ALIAS="$CM_KEY_ALIAS" \
-            -PKEY_PASSWORD="$CM_KEY_PASSWORD"
+          ./gradlew bundleRelease --stacktrace 2>&1 | tail -100
 
     artifacts:
       - app/build/outputs/bundle/release/*.aab

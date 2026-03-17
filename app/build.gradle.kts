@@ -24,15 +24,14 @@ android {
         create("release") {
             val keystorePath = project.findProperty("KEYSTORE_PATH") as String?
                 ?: System.getenv("CM_KEYSTORE_PATH")
-            if (keystorePath != null) {
-                storeFile = file(keystorePath)
-                storePassword = project.findProperty("KEYSTORE_PASSWORD") as String?
-                    ?: System.getenv("CM_KEYSTORE_PASSWORD") ?: ""
-                keyAlias = project.findProperty("KEY_ALIAS") as String?
-                    ?: System.getenv("CM_KEY_ALIAS") ?: ""
-                keyPassword = project.findProperty("KEY_PASSWORD") as String?
-                    ?: System.getenv("CM_KEY_PASSWORD") ?: ""
-            }
+                ?: return@create
+            storeFile = file(keystorePath)
+            storePassword = project.findProperty("KEYSTORE_PASSWORD") as String?
+                ?: System.getenv("CM_KEYSTORE_PASSWORD") ?: ""
+            keyAlias = project.findProperty("KEY_ALIAS") as String?
+                ?: System.getenv("CM_KEY_ALIAS") ?: ""
+            keyPassword = project.findProperty("KEY_PASSWORD") as String?
+                ?: System.getenv("CM_KEY_PASSWORD") ?: ""
         }
     }
 
