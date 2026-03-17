@@ -38,7 +38,9 @@ workflows:
 
       - name: Build release AAB
         script: |
-          ./gradlew :app:bundleRelease
+          ./gradlew :app:bundleRelease 2>&1 | tee build_output.txt | grep -E "^e:|error:|Caused by:|Exception|FAILED" | head -50
+          echo "--- Full tail ---"
+          tail -30 build_output.txt
           echo "--- Find AAB ---"
           find . -name "*.aab" 2>/dev/null
 
