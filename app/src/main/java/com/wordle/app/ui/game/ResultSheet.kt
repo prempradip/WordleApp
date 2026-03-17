@@ -10,7 +10,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.SentimentDissatisfied
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -237,7 +244,7 @@ private fun DefinitionCard(state: DefinitionUiState) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Default.MenuBook, null,
+                        Icon(Icons.AutoMirrored.Filled.MenuBook, null,
                             tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                         Text(def.word.lowercase(), fontWeight = FontWeight.Black, fontSize = 16.sp)
                         if (def.phonetic.isNotBlank())

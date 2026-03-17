@@ -9,7 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Contrast
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -146,7 +151,7 @@ fun SettingsScreen(
             // ── Audio & Haptics ────────────────────────────────────────
             SectionLabel("Audio & Haptics")
             SettingsCard {
-                SwitchRow(Icons.Default.VolumeUp, "Sound Effects",
+                SwitchRow(Icons.AutoMirrored.Filled.VolumeUp, "Sound Effects",
                     "Key clicks and win fanfare", soundOn, viewModel::setSoundOn)
                 Divider()
                 SliderRow(Icons.Default.Vibration, "Haptic Feedback",

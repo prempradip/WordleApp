@@ -15,6 +15,14 @@
         android:theme="@style/Theme.WordleApp"
         android:networkSecurityConfig="@xml/network_security_config">
 
+        <!-- Override androidx-startup authority to use our applicationId -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge"
+            xmlns:tools="http://schemas.android.com/tools" />
+
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
