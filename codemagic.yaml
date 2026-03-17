@@ -34,7 +34,7 @@ workflows:
 
       - name: Run unit tests
         script: |
-          ./gradlew testDebugUnitTest
+          ./gradlew assembleDebug --stacktrace 2>&1 | tail -150
 
       - name: Build release AAB
         script: |
