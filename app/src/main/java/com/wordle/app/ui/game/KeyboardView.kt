@@ -4,12 +4,13 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -111,7 +112,7 @@ private fun LetterKey(
             .background(bg)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = true, color = Color.White.copy(alpha = 0.3f))
+                indication = ripple(bounded = true, color = Color.White.copy(alpha = 0.3f))
             ) {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onKey(char)
@@ -140,7 +141,7 @@ private fun ActionKey(label: String, isDark: Boolean, onClick: () -> Unit) {
             .background(bg)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = true, color = Color.White.copy(alpha = 0.3f))
+                indication = ripple(bounded = true, color = Color.White.copy(alpha = 0.3f))
             ) {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
