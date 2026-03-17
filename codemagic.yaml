@@ -53,7 +53,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - $NOTIFY_EMAIL
+          - prempradip@gmail.com
         notify:
           success: true
           failure: true
