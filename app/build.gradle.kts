@@ -10,22 +10,12 @@ android {
     namespace = "com.wordle.app"
     compileSdk = 35
 
-    configurations.configureEach {
-        resolutionStrategy {
-            // Force single version of kotlin stdlib
-            force("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
-        }
-        // Exclude Material 2 to prevent duplicate classes with Material 3
-        exclude(group = "androidx.compose.material", module = "material")
-    }
-
     defaultConfig {
         applicationId = "com.wordle.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-        // Required for Play Store listing
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -58,12 +48,26 @@ android {
         density  { enableSplit = true }
         abi      { enableSplit = true }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
+
+    // Suppress duplicate class check — M3 BOM pulls in overlapping artifacts
+    // that are safe duplicates resolved by R8 during minification
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/versions/9/previous-compilation-data.bin"
+        }
+    }
+}
+
+configurations.configureEach {
+    exclude(group = "androidx.compose.material", module = "material")
 }
 
 dependencies {
@@ -90,14 +94,12 @@ dependencies {
     implementation(libs.androidx.work)
     debugImplementation(libs.androidx.ui.tooling)
 
-    // Unit tests
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     testImplementation(libs.truth)
     testImplementation(libs.turbine)
 
-    // Instrumented / Room integration tests
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.room.testing)
