@@ -10,6 +10,15 @@ android {
     namespace = "com.wordle.app"
     compileSdk = 35
 
+    configurations.configureEach {
+        resolutionStrategy {
+            // Force single version of kotlin stdlib
+            force("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
+        }
+        // Exclude Material 2 to prevent duplicate classes with Material 3
+        exclude(group = "androidx.compose.material", module = "material")
+    }
+
     defaultConfig {
         applicationId = "com.wordle.app"
         minSdk = 26
