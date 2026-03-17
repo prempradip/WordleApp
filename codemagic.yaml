@@ -38,10 +38,9 @@ workflows:
 
       - name: Build release AAB
         script: |
-          ./gradlew :app:bundleRelease 2>&1 | tee build_output.txt | grep -E "^e:|error:|Caused by:|Exception|FAILED" | head -50
-          echo "--- Full tail ---"
-          tail -30 build_output.txt
-          echo "--- Find AAB ---"
+          ./gradlew :app:checkReleaseDuplicateClasses --info 2>&1 | grep -E "Duplicate|duplicate|class |FAILED|error" | head -40
+          echo "---"
+          ./gradlew :app:bundleRelease 2>&1 | grep -v "releaseRuntimeClasspath" | grep -v "debugRuntimeClasspath" | head -60
           find . -name "*.aab" 2>/dev/null
 
     artifacts:
