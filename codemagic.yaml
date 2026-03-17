@@ -38,7 +38,8 @@ workflows:
 
       - name: Build release AAB
         script: |
-          ./gradlew bundleRelease --stacktrace 2>&1 | tail -100
+          ./gradlew bundleRelease 2>&1 | head -80
+          echo "Exit: $?"
           echo "--- Listing build outputs ---"
           find app/build/outputs -type f 2>/dev/null || echo "No outputs found"
 
