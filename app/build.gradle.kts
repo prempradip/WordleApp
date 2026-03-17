@@ -22,16 +22,10 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePath = project.findProperty("KEYSTORE_PATH") as String?
-                ?: System.getenv("CM_KEYSTORE_PATH")
-                ?: return@create
-            storeFile = file(keystorePath)
-            storePassword = project.findProperty("KEYSTORE_PASSWORD") as String?
-                ?: System.getenv("CM_KEYSTORE_PASSWORD") ?: ""
-            keyAlias = project.findProperty("KEY_ALIAS") as String?
-                ?: System.getenv("CM_KEY_ALIAS") ?: ""
-            keyPassword = project.findProperty("KEY_PASSWORD") as String?
-                ?: System.getenv("CM_KEY_PASSWORD") ?: ""
+            storeFile = System.getenv("CM_KEYSTORE_PATH")?.let { file(it) }
+            storePassword = System.getenv("CM_KEYSTORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("CM_KEY_ALIAS") ?: ""
+            keyPassword = System.getenv("CM_KEY_PASSWORD") ?: ""
         }
     }
 
@@ -40,9 +34,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            val hasKeystore = (project.findProperty("KEYSTORE_PATH") as String?
-                ?: System.getenv("CM_KEYSTORE_PATH")) != null
-            if (hasKeystore) signingConfig = signingConfigs.getByName("release")
+            if (System.getenv("CM_KEYSTORE_PATH") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         debug {
             applicationIdSuffix = ".debug"

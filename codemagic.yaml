@@ -38,13 +38,9 @@ workflows:
 
       - name: Build release AAB
         script: |
-          echo "Working dir: $(pwd)"
-          echo "CM_BUILD_DIR: $CM_BUILD_DIR"
           ./gradlew :app:bundleRelease
-          echo "Gradle exit: $?"
-          echo "--- Find AAB anywhere ---"
-          find . -name "*.aab" 2>/dev/null || echo "No AAB found"
-          find . -name "*.apk" 2>/dev/null || echo "No APK found"
+          echo "--- Find AAB ---"
+          find . -name "*.aab" 2>/dev/null
 
     artifacts:
       - "**/*.aab"
