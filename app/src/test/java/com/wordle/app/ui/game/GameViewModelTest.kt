@@ -61,8 +61,8 @@ class GameViewModelTest {
         every { profileRepository.soundOn } returns flowOf(true)
         every { profileRepository.hapticLevel } returns flowOf(1)
         every { achievementRepository.unlockedIds } returns flowOf(emptyList())
-        every { wordRepository.getRandomWord(any()) } returns "PLANT"
-        every { wordRepository.isValidWord(any(), any()) } returns true
+        every { wordRepository.getRandomWord(any(), any()) } returns "PLANT"
+        every { wordRepository.isValidWord(any(), any(), any()) } returns true
         coEvery { dailyWordRepository.clearDailyIfNewDay() } just Runs
         every { dailyWordRepository.msUntilNextWord() } returns 3_600_000L
     }
@@ -134,7 +134,7 @@ class GameViewModelTest {
 
     @Test
     fun `onSubmit with invalid word triggers shake`() = runTest {
-        every { wordRepository.isValidWord("ZZZZZ", any()) } returns false
+        every { wordRepository.isValidWord("ZZZZZ", any(), any()) } returns false
         viewModel = createViewModel()
         "ZZZZZ".forEach { viewModel.onKey(it) }
         viewModel.onSubmit()
@@ -157,7 +157,7 @@ class GameViewModelTest {
 
     @Test
     fun `wrong guess advances currentRow`() = runTest {
-        every { wordRepository.isValidWord("CRANE", any()) } returns true
+        every { wordRepository.isValidWord("CRANE", any(), any()) } returns true
         viewModel = createViewModel()
         "CRANE".forEach { viewModel.onKey(it) }
         viewModel.onSubmit()
@@ -166,7 +166,7 @@ class GameViewModelTest {
 
     @Test
     fun `losing all attempts sets status to LOST`() = runTest {
-        every { wordRepository.isValidWord(any(), any()) } returns true
+        every { wordRepository.isValidWord(any(), any(), any()) } returns true
         coEvery { statsDao.getStats(any(), any()) } returns flowOf(emptyList())
         coEvery { achievementRepository.tryUnlock(any()) } returns null
         coEvery { profileRepository.definitionViews } returns flowOf(0)
@@ -246,23 +246,23 @@ class GameViewModelTest {
     fun `hard mode validation blocks invalid guess`() = runTest {
         val hardConfig = defaultConfig.copy(difficulty = Difficulty.HARD)
         every { prefsRepository.gameConfig } returns flowOf(hardConfig)
-        every { wordRepository.isValidWord(any(), any()) } returns true
+        every { wordRepository.isValidWord(any(), any(), any()) } returns true
 
         viewModel = createViewModel()
 
         // Submit first guess to establish a CORRECT letter
         "PLANT".forEach { viewModel.onKey(it) } // This wins immediately, so use a wrong word
         // Reset and use a word that establishes constraints
-        every { wordRepository.getRandomWord(any()) } returns "CRANE"
+        every { wordRepository.getRandomWord(any(), any()) } returns "CRANE"
         viewModel.startNewGame(hardConfig)
 
         // Submit BRAVE — establishes R as PRESENT at index 1 (target CRANE has R at index 2)
-        every { wordRepository.isValidWord("BRAVE", any()) } returns true
+        every { wordRepository.isValidWord("BRAVE", any(), any()) } returns true
         "BRAVE".forEach { viewModel.onKey(it) }
         viewModel.onSubmit()
 
         // Now try a guess without R — should fail hard mode
-        every { wordRepository.isValidWord("DELTA", any()) } returns true
+        every { wordRepository.isValidWord("DELTA", any(), any()) } returns true
         "DELTA".forEach { viewModel.onKey(it) }
         viewModel.onSubmit()
 
