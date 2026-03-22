@@ -30,6 +30,7 @@ import com.wordle.app.core.Difficulty
 import com.wordle.app.core.GameConfig
 import com.wordle.app.core.GameMode
 import com.wordle.app.core.Language
+import com.wordle.app.core.WordLength
 import com.wordle.app.data.AppTheme
 import com.wordle.app.theme.TileCorrect
 import com.wordle.app.ui.game.GameViewModel
@@ -98,9 +99,25 @@ fun SettingsScreen(
                     if (idx > 0) Divider()
                     RadioRow(
                         label = lang.displayName,
-                        sublabel = "${lang.wordLength}-letter words",
+                        sublabel = "Supports ${lang.supportedLengths.size} word lengths",
                         selected = state.config.language == lang,
-                        onClick = { viewModel.updateConfig(GameConfig(lang, state.config.difficulty, state.config.mode)) }
+                        onClick = { viewModel.updateConfig(GameConfig(lang, state.config.wordLength, state.config.difficulty, state.config.mode)) }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
+
+            // ── Word Length ────────────────────────────────────────────
+            SectionLabel("Word Length")
+            SettingsCard {
+                state.config.language.supportedLengths.forEachIndexed { idx, wl ->
+                    if (idx > 0) Divider()
+                    RadioRow(
+                        label = wl.displayName,
+                        sublabel = "${wl.value}-letter words",
+                        selected = state.config.wordLength == wl,
+                        onClick = { viewModel.updateConfig(state.config.copy(wordLength = wl)) }
                     )
                 }
             }
@@ -116,7 +133,7 @@ fun SettingsScreen(
                         label = diff.label,
                         sublabel = "${diff.maxAttempts} attempts · ${diff.hintsAllowed} hint${if (diff.hintsAllowed != 1) "s" else ""}${if (diff == Difficulty.HARD) " · Must use clues" else ""}",
                         selected = state.config.difficulty == diff,
-                        onClick = { viewModel.updateConfig(GameConfig(state.config.language, diff, state.config.mode)) }
+                        onClick = { viewModel.updateConfig(GameConfig(state.config.language, state.config.wordLength, diff, state.config.mode)) }
                     )
                 }
             }

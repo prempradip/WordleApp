@@ -3,7 +3,7 @@ package com.wordle.app.core
 object GameEngine {
 
     fun initBoard(config: GameConfig): List<List<TileState>> {
-        val wordLen = config.language.wordLength
+        val wordLen = config.wordLength.value
         return List(config.difficulty.maxAttempts) {
             List(wordLen) { TileState() }
         }

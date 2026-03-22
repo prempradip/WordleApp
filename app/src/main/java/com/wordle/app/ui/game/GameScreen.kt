@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.wordle.app.core.GameMode
 import com.wordle.app.core.GameStatus
+import com.wordle.app.core.WordLength
 import com.wordle.app.data.Achievement
 import com.wordle.app.theme.GoldGradientStart
 import com.wordle.app.theme.TileCorrect
@@ -122,6 +123,12 @@ fun GameScreen(
 
                 Spacer(Modifier.height(4.dp))
 
+                val adaptiveTileSize = when (state.config.wordLength) {
+                    WordLength.FOUR  -> 68
+                    WordLength.FIVE  -> 58
+                    WordLength.SIX   -> 50
+                    WordLength.SEVEN -> 44
+                }
                 BoardView(
                     board = state.board,
                     currentRow = state.currentRow,
@@ -129,7 +136,7 @@ fun GameScreen(
                     hintRevealedPositions = state.hintRevealedPositions,
                     shakeRow = state.shakeRow,
                     revealRow = state.revealRow,
-                    tileSize = 58,
+                    tileSize = adaptiveTileSize,
                     modifier = Modifier.weight(1f).wrapContentHeight()
                 )
 

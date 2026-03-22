@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.wordle.app.core.Language
+import com.wordle.app.core.WordLength
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -29,12 +30,12 @@ class DailyWordRepository @Inject constructor(
         val KEY_DAILY_LANG       = stringPreferencesKey("daily_lang")
     }
 
-    /** Returns today's word for the given language, deterministically seeded by date. */
-    fun getDailyWord(language: Language): String {
+    /** Returns today's word for the given language and word length, deterministically seeded by date. */
+    fun getDailyWord(language: Language, wordLength: WordLength): String {
         val today = todayEpochDay()
-        // Seed the word selection by day + language so it's consistent per device
-        val words = wordRepository.getAllWords(language)
-        val idx = ((today * 31L + language.ordinal * 7L) % words.size).toInt()
+        // Seed the word selection by day + language + wordLength so it's consistent per device
+        val words = wordRepository.getAllWords(language, wordLength)
+        val idx = ((today * 31L + language.ordinal * 7L + wordLength.ordinal * 13L) % words.size).toInt()
         return words[idx].uppercase()
     }
 

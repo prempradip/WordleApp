@@ -56,6 +56,12 @@ android {
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
 
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
+
     // Suppress duplicate class check — M3 BOM pulls in overlapping artifacts
     // that are safe duplicates resolved by R8 during minification
     packaging {
@@ -95,6 +101,8 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.truth)
     testImplementation(libs.turbine)
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.property)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.core)

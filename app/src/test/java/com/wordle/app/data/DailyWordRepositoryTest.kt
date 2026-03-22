@@ -2,6 +2,7 @@ package com.wordle.app.data
 
 import com.google.common.truth.Truth.assertThat
 import com.wordle.app.core.Language
+import com.wordle.app.core.WordLength
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Before
@@ -18,7 +19,7 @@ class DailyWordRepositoryTest {
     fun setup() {
         wordRepository = mockk()
         // Provide a stable word list for deterministic index calculation
-        every { wordRepository.getAllWords(any()) } returns listOf(
+        every { wordRepository.getAllWords(any(), any()) } returns listOf(
             "APPLE", "BRAVE", "CRANE", "DELTA", "EAGLE",
             "FLAME", "GRACE", "HONEY", "IVORY", "JOKER"
         )
@@ -27,16 +28,16 @@ class DailyWordRepositoryTest {
     @Test
     fun `getDailyWord returns a word from the list`() {
         val repo = makeDailyWordRepo()
-        val word = repo.getDailyWord(Language.ENGLISH)
-        val allWords = wordRepository.getAllWords(Language.ENGLISH).map { it.uppercase() }
+        val word = repo.getDailyWord(Language.ENGLISH, WordLength.FIVE)
+        val allWords = wordRepository.getAllWords(Language.ENGLISH, WordLength.FIVE).map { it.uppercase() }
         assertThat(allWords).contains(word)
     }
 
     @Test
     fun `getDailyWord is deterministic for same day and language`() {
         val repo = makeDailyWordRepo()
-        val word1 = repo.getDailyWord(Language.ENGLISH)
-        val word2 = repo.getDailyWord(Language.ENGLISH)
+        val word1 = repo.getDailyWord(Language.ENGLISH, WordLength.FIVE)
+        val word2 = repo.getDailyWord(Language.ENGLISH, WordLength.FIVE)
         assertThat(word1).isEqualTo(word2)
     }
 
@@ -46,7 +47,7 @@ class DailyWordRepositoryTest {
         // Different language ordinals produce different indices (most of the time)
         // We just verify the function runs without error for all languages
         Language.entries.forEach { lang ->
-            val word = repo.getDailyWord(lang)
+            val word = repo.getDailyWord(lang, WordLength.FIVE)
             assertThat(word).isNotEmpty()
             assertThat(word).matches("[A-Z]+")
         }
@@ -55,7 +56,7 @@ class DailyWordRepositoryTest {
     @Test
     fun `getDailyWord returns uppercase`() {
         val repo = makeDailyWordRepo()
-        val word = repo.getDailyWord(Language.ENGLISH)
+        val word = repo.getDailyWord(Language.ENGLISH, WordLength.FIVE)
         assertThat(word).isEqualTo(word.uppercase())
     }
 
@@ -70,10 +71,10 @@ class DailyWordRepositoryTest {
     @Test
     fun `getDailyWord index stays within word list bounds`() {
         // Use a small list to stress-test modulo
-        every { wordRepository.getAllWords(any()) } returns listOf("ALPHA", "BRAVO", "DELTA")
+        every { wordRepository.getAllWords(any(), any()) } returns listOf("ALPHA", "BRAVO", "DELTA")
         val repo = makeDailyWordRepo()
         Language.entries.forEach { lang ->
-            val word = repo.getDailyWord(lang)
+            val word = repo.getDailyWord(lang, WordLength.FIVE)
             assertThat(listOf("ALPHA", "BRAVO", "DELTA")).contains(word)
         }
     }
@@ -81,19 +82,27 @@ class DailyWordRepositoryTest {
     @Test
     fun `getDailyWord produces different words for different simulated days`() {
         val words = (1..50).map { "W${it.toString().padStart(4, '0')}" }
-        every { wordRepository.getAllWords(any()) } returns words
-
-        // Simulate two different days by using two testable instances with different day offsets
-        val repo1 = DailyWordRepositoryTestableWithDay(wordRepository, dayOffset = 0)
-        val repo2 = DailyWordRepositoryTestableWithDay(wordRepository, dayOffset = 1)
+        every { wordRepository.getAllWords(any(), any()) } returns words
 
         // With 50 words and different day seeds, at least some days will differ
         val results = (0..9).map { day ->
             DailyWordRepositoryTestableWithDay(wordRepository, dayOffset = day.toLong())
-                .getDailyWord(Language.ENGLISH)
+                .getDailyWord(Language.ENGLISH, WordLength.FIVE)
         }
         // Not all 10 days should return the same word
         assertThat(results.toSet().size).isGreaterThan(1)
+    }
+
+    @Test
+    fun `getDailyWord differs across word lengths`() {
+        val repo = makeDailyWordRepo()
+        // Different wordLength ordinals produce different indices (most of the time)
+        // We just verify the function runs without error for all word lengths
+        WordLength.entries.forEach { wl ->
+            val word = repo.getDailyWord(Language.ENGLISH, wl)
+            assertThat(word).isNotEmpty()
+            assertThat(word).matches("[A-Z]+")
+        }
     }
 
     // Helper — creates a DailyWordRepository without a real Context by
@@ -110,10 +119,10 @@ class DailyWordRepositoryTest {
 class DailyWordRepositoryTestable(
     private val wordRepo: WordRepository
 ) {
-    fun getDailyWord(language: Language): String {
+    fun getDailyWord(language: Language, wordLength: WordLength): String {
         val today = todayEpochDay()
-        val words = wordRepo.getAllWords(language)
-        val idx = ((today * 31L + language.ordinal * 7L) % words.size).toInt()
+        val words = wordRepo.getAllWords(language, wordLength)
+        val idx = ((today * 31L + language.ordinal * 7L + wordLength.ordinal * 13L) % words.size).toInt()
         return words[idx].uppercase()
     }
 
@@ -141,10 +150,10 @@ class DailyWordRepositoryTestableWithDay(
     private val wordRepo: WordRepository,
     private val dayOffset: Long = 0L
 ) {
-    fun getDailyWord(language: Language): String {
+    fun getDailyWord(language: Language, wordLength: WordLength): String {
         val today = todayEpochDay() + dayOffset
-        val words = wordRepo.getAllWords(language)
-        val idx = ((today * 31L + language.ordinal * 7L) % words.size).toInt()
+        val words = wordRepo.getAllWords(language, wordLength)
+        val idx = ((today * 31L + language.ordinal * 7L + wordLength.ordinal * 13L) % words.size).toInt()
         return words[idx].uppercase()
     }
 

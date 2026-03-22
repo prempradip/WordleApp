@@ -75,8 +75,8 @@ class GameViewModel @Inject constructor(
         viewModelScope.launch {
             dailyWordRepository.clearDailyIfNewDay()
             val target = when (config.mode) {
-                GameMode.DAILY    -> dailyWordRepository.getDailyWord(config.language)
-                GameMode.PRACTICE -> wordRepository.getRandomWord(config.language)
+                GameMode.DAILY    -> dailyWordRepository.getDailyWord(config.language, config.wordLength)
+                GameMode.PRACTICE -> wordRepository.getRandomWord(config.language, config.wordLength)
             }
             _state.value = GameState(
                 config = config,
@@ -104,7 +104,7 @@ class GameViewModel @Inject constructor(
     fun onKey(char: Char) {
         val s = _state.value
         if (s.status != GameStatus.IN_PROGRESS) return
-        if (s.currentInput.length >= s.config.language.wordLength) return
+        if (s.currentInput.length >= s.config.wordLength.value) return
         _state.value = s.copy(currentInput = s.currentInput + char.uppercaseChar(), errorMessage = null, shakeRow = -1)
         updateBoardInput()
     }
@@ -119,13 +119,13 @@ class GameViewModel @Inject constructor(
     fun onSubmit() {
         val s = _state.value
         if (s.status != GameStatus.IN_PROGRESS) return
-        val wordLen = s.config.language.wordLength
+        val wordLen = s.config.wordLength.value
         if (s.currentInput.length < wordLen) { triggerShake(s.currentRow, "Not enough letters"); return }
         if (s.config.difficulty == Difficulty.HARD) {
             val error = GameEngine.validateHardMode(s.currentInput, s.board.take(s.currentRow), s.targetWord)
             if (error != null) { triggerShake(s.currentRow, error); return }
         }
-        if (!wordRepository.isValidWord(s.currentInput, s.config.language)) {
+        if (!wordRepository.isValidWord(s.currentInput, s.config.language, s.config.wordLength)) {
             triggerShake(s.currentRow, "Not in word list"); return
         }
         val letterStates = GameEngine.evaluateGuess(s.currentInput, s.targetWord)
@@ -177,7 +177,19 @@ class GameViewModel @Inject constructor(
     fun buildChallengeLink(): String = challengeRepository.buildChallengeLink(_state.value.targetWord)
     fun buildChallengeShareText(): String = challengeRepository.buildChallengeShareText(_state.value.targetWord)
 
-    fun updateConfig(config: GameConfig) { viewModelScope.launch { prefsRepository.saveConfig(config) } }
+    fun updateConfig(config: GameConfig) {
+        viewModelScope.launch {
+            val clampedLength = if (config.wordLength in config.language.supportedLengths) {
+                config.wordLength
+            } else {
+                WordLength.FIVE
+            }
+            val safeConfig = config.copy(wordLength = clampedLength)
+            val words = wordRepository.loadWordSet(safeConfig.language, safeConfig.wordLength)
+            if (words.isEmpty()) return@launch
+            prefsRepository.saveConfig(safeConfig)
+        }
+    }
     fun setDarkTheme(enabled: Boolean)   { viewModelScope.launch { prefsRepository.setDarkTheme(enabled) } }
     fun setHighContrast(enabled: Boolean){ viewModelScope.launch { prefsRepository.setHighContrast(enabled) } }
     fun setAppTheme(theme: AppTheme)     { viewModelScope.launch { profileRepository.setAppTheme(theme) } }
@@ -197,7 +209,7 @@ class GameViewModel @Inject constructor(
 
     private fun updateBoardInput() {
         val s = _state.value
-        val wordLen = s.config.language.wordLength
+        val wordLen = s.config.wordLength.value
         val updatedRow = List(wordLen) { i ->
             val ch = s.currentInput.getOrNull(i) ?: ' '
             TileState(ch, if (ch != ' ') LetterState.TYPED else LetterState.EMPTY)

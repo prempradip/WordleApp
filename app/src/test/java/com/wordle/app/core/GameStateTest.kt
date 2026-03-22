@@ -43,10 +43,17 @@ class GameStateTest {
     }
 
     @Test
-    fun `all languages have word length 5`() {
+    fun `all languages support all four word lengths`() {
+        val expectedLengths = setOf(WordLength.FOUR, WordLength.FIVE, WordLength.SIX, WordLength.SEVEN)
         Language.entries.forEach { lang ->
-            assertThat(lang.wordLength).isEqualTo(5)
+            assertThat(lang.supportedLengths).isEqualTo(expectedLengths)
         }
+    }
+
+    @Test
+    fun `default GameConfig uses FIVE word length`() {
+        val config = GameConfig()
+        assertThat(config.wordLength).isEqualTo(WordLength.FIVE)
     }
 
     @Test
